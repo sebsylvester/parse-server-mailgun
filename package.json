@@ -1,0 +1,46 @@
+{
+  "name": "parse-server-mailgun",
+  "version": "2.1.6",
+  "description": "Mailgun adapter for Parse Server apps",
+  "main": "./lib/MailgunAdapter.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src -d lib",
+    "test": "./node_modules/mocha/bin/_mocha --compilers js:babel-core/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sebsylvester/parse-server-mailgun.git"
+  },
+  "keywords": [
+    "parse",
+    "parse-server",
+    "email-adapter"
+  ],
+  "author": "Sebastian Sylvester",
+  "license": "MIT",
+  "bugs": "https://github.com/sebsylvester/parse-server-mailgun/issues",
+  "homepage": "https://github.com/sebsylvester/parse-server-mailgun",
+  "files": [
+    "src",
+    "lib",
+    "test"
+  ],
+  "dependencies": {
+    "co": "^4.6.0",
+    "lodash.template": "^4.3.0",
+    "mailcomposer": "^3.10.0",
+    "mailgun-js": "^0.7.11"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-core": "^6.10.4",
+    "babel-polyfill": "^6.9.1",
+    "babel-preset-es2015": "^6.9.0",
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3",
+    "sinon": "^1.17.4"
+  },
+  "peerDependencies": {
+    "parse-server": "^2.2.16"
+  }
+}
