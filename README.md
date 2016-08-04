@@ -21,7 +21,7 @@ var server = ParseServer({
     module: 'parse-server-mailgun',
     options: {
       // The address that your emails come from
-      fromAddress: 'parse@example.com',
+      fromAddress: 'YourApp <noreply@yourapp.com>',
       // Your domain from mailgun.com
       domain: 'example.com',
       // Your API key from mailgun.com
@@ -57,7 +57,7 @@ var server = ParseServer({
 The Parse Server uses the MailgunAdapter for only two use cases: password reset and email address verification.
 With a few lines of code, it's also possible to use the MailgunAdapter directly, so that you can send any other template-based email, provided it has been configured as shown in the example configuration above.
 
-```
+```js
 // Get access to Parse Server's cache
 // With ES2015 syntax:
 const { AppCache } = require('parse-server/lib/cache');
@@ -66,13 +66,15 @@ const AppCache = require('parse-server/lib/cache').AppCache;
 // Get a reference to the MailgunAdapter
 const MailgunAdapter = AppCache.get('yourAppId')['userController']['adapter'];
 // Invoke the send method with an options object
-MailgunAdapter.send(
-  templateName: 'customEmailAlert'
-  subject: 'Optionally, you can override your configuration'
-  fromAddress: 'Also optional, an override of the adapter's fromAddress'
-  recipient: 'user@email.com'
+MailgunAdapter.send({
+  templateName: 'customEmailAlert',
+  // Optional override of your configuration's subject
+  subject: 'Important: action required',
+  // Optional override of the adapter's fromAddress
+  fromAddress: 'Alerts <noreply@yourapp.com>',
+  recipient: 'user@email.com',
   variables: { alert: 'New posts' } // {{alert}} will be compiled to 'New posts'
-)
+});
 ```
 
 ### Breaking changes since v2.0.0
@@ -89,7 +91,7 @@ For password reset and address verification messages, you can use the following 
 * `{{email}}` - the Parse.User object's email property
 
 Additional variables can be introduced by adding a callback.
-An example is shown in the configuration above, The relevant Parse.User object is passed as an argument. The return value must be a plain object where the property names exactly match their template counterparts.
-Note: this only works for password reset and email address verification messages.
+An example is shown in the configuration above. The relevant Parse.User object is passed as an argument. The return value must be a plain object where the property names exactly match their template counterparts.
+Note: the callback options only applies to the password reset and email address verification use cases.
 
-For any other template, you use the ```MailgunAdapter``` directly and pass any variable you need to the ```send``` method as explained in the code sample above.
+For any other use case, you use the ```MailgunAdapter``` directly and pass any variable you need to the ```send``` method as explained in the code sample above.
