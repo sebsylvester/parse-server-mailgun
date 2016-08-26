@@ -228,7 +228,7 @@ describe('MailgunAdapter', function () {
         });
     });
 
-    describe('#sendCustomEmail()', function () {
+    describe('#send()', function () {
         let _sendMail;
 
         before(function () {
@@ -243,8 +243,8 @@ describe('MailgunAdapter', function () {
             const adapter = new MailgunAdapter(config);
             const templateName = 'customEmail';
             const fromAddress = config.fromAddress;
-            const recipient = 'test@test.com'
-            const variables = { appName: 'AwesomeApp' };
+            const recipient = 'test@test.com';
+            const variables = { appName: 'AwesomeApp', username: 'test' };
             const options = {templateName, fromAddress, recipient, variables};
 
             const promise = adapter.send(options);
