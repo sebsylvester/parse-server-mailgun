@@ -97,7 +97,7 @@ class MailgunAdapter extends MailAdapter.default {
             };
         }
 
-        co(function* () {
+        return co(function* () {
             let plainTextEmail, htmlEmail, compiled;
 
             // Load plain-text version
