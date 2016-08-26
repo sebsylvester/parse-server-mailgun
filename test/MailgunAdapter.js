@@ -31,8 +31,13 @@ const config = {
         customAlert: {
             subject: 'Important notice about your account',
             pathPlainText: path.join(__dirname, 'email-templates/password_reset_email.txt'),
-            pathHtml: path.join(__dirname, 'email-templates/password_reset_email.html')
-        }
+            pathHtml: path.join(__dirname, 'email-templates/password_reset_email.html'),
+        },
+        customEmail: {
+          subject: 'Test custom email template',
+          pathPlainText: path.join(__dirname, 'email-templates/custom_email.txt'),
+          pathHtml: path.join(__dirname, 'email-templates/custom_email.html'),
+        },
     }
 };
 
@@ -142,7 +147,7 @@ describe('MailgunAdapter', function () {
 
         it('should succeed with properly configured templates option', function (done) {
             try {
-                var adapter = new MailgunAdapter({
+                const adapter = new MailgunAdapter({
                     apiKey: '.',
                     domain: '.',
                     fromAddress: '.',
@@ -169,7 +174,7 @@ describe('MailgunAdapter', function () {
     });
 
     describe('#sendPasswordResetEmail()', function () {
-        var _sendMail;
+        let _sendMail;
 
         before(function () {
             _sendMail = sinon.spy(MailgunAdapter.prototype, '_sendMail');
@@ -196,7 +201,8 @@ describe('MailgunAdapter', function () {
     });
 
     describe('#sendVerificationEmail()', function () {
-        var _sendMail;
+        let _sendMail;
+
 
         before(function () {
             _sendMail = sinon.spy(MailgunAdapter.prototype, '_sendMail');
@@ -221,4 +227,29 @@ describe('MailgunAdapter', function () {
             sinon.assert.calledWith(_sendMail, expectedArguments);
         });
     });
+
+    describe('#sendCustomEmail()', function () {
+        let _sendMail;
+
+        before(function () {
+            _sendMail = sinon.spy(MailgunAdapter.prototype, '_sendMail');
+        });
+
+        after(function () {
+            _sendMail.restore();
+        });
+
+        it('should invoke #_sendMail() with the correct arguments', function () {
+            const adapter = new MailgunAdapter(config);
+            const templateName = 'customEmail';
+            const fromAddress = config.fromAddress;
+            const recipient = 'test@test.com'
+            const variables = { appName: 'AwesomeApp' };
+            const options = {templateName, fromAddress, recipient, variables};
+
+            const promise = adapter.send(options);
+            expect(promise).to.be.an.instanceof(Promise);
+        });
+    });
+
 });
