@@ -36,15 +36,8 @@ class MailgunAdapter extends MailAdapter.default {
         this.cache = {};
     }
 
-    // TODO update this
     /**
      * Method to send MIME emails via Mailgun
-     * The options object would have the parameters:
-     * - subject: email's subject
-     * - link: to reset password or verify email address
-     * - user: the Parse.User object
-     * - pathPlainText: path to plain-text version of email template
-     * - pathHtml: path to html version of email template
      * @param {Object} options
      * @returns {Promise}
      */
