@@ -1,7 +1,7 @@
 const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
-const template = require('lodash.template');
+const _template = require('lodash.template');
 const co = require('co');
 const fs = require('fs');
 const path = require('path');
@@ -23,18 +23,20 @@ class MailgunAdapter extends MailAdapter.default {
         const { templates = {} } = options;
         ['passwordResetEmail', 'verificationEmail'].forEach((key) => {
             const { subject, pathPlainText, callback } = templates[key] || {};
-            if(typeof subject !== 'string' || typeof pathPlainText !== 'string')
+            if (typeof subject !== 'string' || typeof pathPlainText !== 'string')
                 throw new Error('MailgunAdapter templates are not properly configured.');
 
-            if(callback && typeof callback !== 'function')
+            if (callback && typeof callback !== 'function')
                 throw new Error('MailgunAdapter template callback is not a function.');
         });
 
         this.mailgun = mailgun({ apiKey, domain });
         this.fromAddress = fromAddress;
         this.templates = templates;
+        this.cache = {};
     }
 
+    // TODO update this
     /**
      * Method to send MIME emails via Mailgun
      * The options object would have the parameters:
@@ -47,19 +49,22 @@ class MailgunAdapter extends MailAdapter.default {
      * @returns {Promise}
      */
     _sendMail(options) {
-        const loadEmailTemplate = this.loadEmailTemplate;
-        let message = {}, templateVars = {}, pathPlainText, pathHtml;
+        const self = this;
+        let message = {}, templateVars = {}, templateName = options.templateName;
 
-        if(options.templateName) {
-            const { templateName, subject, fromAddress, recipient, variables } = options;
-            let template = this.templates[templateName];
+        if (!templateName)
+            throw new Error('Invalid options object: missing templateName');
 
-            if(!template) throw new Error(`Could not find template with name ${templateName}`);
-            if(!subject && !template.subject) throw new Error(`Cannot send email with template ${templateName} without a subject`);
-            if(!recipient) throw new Error(`Cannot send email with template ${templateName} without a recipient`);
+        let template = this.templates[templateName];
 
-            pathPlainText = template.pathPlainText;
-            pathHtml = template.pathHtml;
+        if (!template)
+            throw new Error(`Could not find template with name ${templateName}`);
+
+        // The adapter is used directly by the user's code instead via Parse Server
+        if (options.direct) {
+            const { subject, fromAddress, recipient, variables } = options;
+            if (!subject && !template.subject) throw new Error(`Cannot send email with template ${templateName} without a subject`);
+            if (!recipient) throw new Error(`Cannot send email with template ${templateName} without a recipient`);
 
             templateVars = variables;
 
@@ -69,19 +74,16 @@ class MailgunAdapter extends MailAdapter.default {
                 subject: subject || template.subject
             };
         } else {
-            const { link, appName, user, templateConfig } = options;
-            const { callback } = templateConfig;
+            const { link, appName, user } = options;
+            const { callback } = template;
             let userVars;
 
-            if(callback && typeof callback === 'function') {
+            if (callback && typeof callback === 'function') {
                 userVars = callback(user);
                 // If custom user variables are not packaged in an object, ignore it
                 const validUserVars = userVars && userVars.constructor && userVars.constructor.name === 'Object';
                 userVars = validUserVars ? userVars : {};
             }
-
-            pathPlainText = templateConfig.pathPlainText;
-            pathHtml = templateConfig.pathHtml;
 
             templateVars = Object.assign({
                 link,
@@ -93,27 +95,36 @@ class MailgunAdapter extends MailAdapter.default {
             message = {
                 from: this.fromAddress,
                 to: user.get('email'),
-                subject: templateConfig.subject
+                subject: template.subject
             };
         }
 
         return co(function* () {
-            let plainTextEmail, htmlEmail, compiled;
+            let compiled;
+            let pathPlainText = template.pathPlainText;
+            let pathHtml = template.pathHtml;
+            let cachedTemplate = self.cache[templateName] = self.cache[templateName] || {};
 
             // Load plain-text version
-            plainTextEmail = yield loadEmailTemplate(pathPlainText);
-            plainTextEmail = plainTextEmail.toString('utf8');
+            if (!cachedTemplate['text']) {
+                let plainTextEmail = yield self.loadEmailTemplate(pathPlainText);
+                plainTextEmail = plainTextEmail.toString('utf8');
+                cachedTemplate['text'] = plainTextEmail;
+            }
 
             // Compile plain-text template
-            compiled = template(plainTextEmail, { interpolate: /{{([\s\S]+?)}}/g});
+            compiled = _template(cachedTemplate['text'], { interpolate: /{{([\s\S]+?)}}/g});
             // Add processed text to the message object
             message.text = compiled(templateVars);
 
             // Load html version if available
-            if(pathHtml) {
-                htmlEmail = yield loadEmailTemplate(pathHtml);
+            if (pathHtml) {
+                if (!cachedTemplate['html']) {
+                    cachedTemplate['html'] = yield self.loadEmailTemplate(pathHtml);
+                }
+
                 // Compile html template
-                compiled = template(htmlEmail, { interpolate: /{{([\s\S]+?)}}/g});
+                compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
                 // Add processed HTML to the message object
                 message.html = compiled(templateVars);
             }
@@ -124,7 +135,7 @@ class MailgunAdapter extends MailAdapter.default {
             // Create MIME string
             const mimeString = yield new Promise((resolve, reject) => {
                 composer.build((error, message) => {
-                    if(error) reject(error);
+                    if (error) reject(error);
                     resolve(message);
                 });
             });
@@ -140,7 +151,7 @@ class MailgunAdapter extends MailAdapter.default {
         }).then( payload => {
             return new Promise((resolve, reject) => {
                 this.mailgun.messages().sendMime(payload, (error, body) => {
-                    if(error) reject(error);
+                    if (error) reject(error);
                     resolve(body);
                 });
             });
@@ -156,7 +167,7 @@ class MailgunAdapter extends MailAdapter.default {
      * @returns {Promise}
      */
     sendPasswordResetEmail({ link, appName, user }) {
-        return this._sendMail({ link, appName, user, templateConfig: this.templates.passwordResetEmail });
+        return this._sendMail({ templateName: 'passwordResetEmail', link, appName, user });
     }
 
     /**
@@ -166,7 +177,7 @@ class MailgunAdapter extends MailAdapter.default {
      * @returns {Promise}
      */
     sendVerificationEmail({ link, appName, user }) {
-        return this._sendMail({ link, appName, user, templateConfig: this.templates.verificationEmail });
+        return this._sendMail({ templateName: 'verificationEmail', link, appName, user });
     }
 
     /**
@@ -182,7 +193,7 @@ class MailgunAdapter extends MailAdapter.default {
      * @returns {Promise}
      */
     send({ templateName, subject, fromAddress, recipient, variables = {} }) {
-        return this._sendMail({ templateName, subject, fromAddress, recipient, variables });
+        return this._sendMail({ templateName, subject, fromAddress, recipient, variables, direct: true });
     }
 
     /**
@@ -193,7 +204,7 @@ class MailgunAdapter extends MailAdapter.default {
     loadEmailTemplate(path) {
         return new Promise((resolve, reject) => {
             fs.readFile(path, (err, data) => {
-                if(err) reject(err);
+                if (err) reject(err);
                 resolve(data);
             });
         });
