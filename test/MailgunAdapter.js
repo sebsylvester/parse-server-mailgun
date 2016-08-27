@@ -184,17 +184,18 @@ describe('MailgunAdapter', function () {
             _sendMail.restore();
         });
 
-        it('should invoke #_sendMail() with the correct arguments', function () {
+        it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
             const link = 'http://password-reset-link';
             const appName = 'AwesomeApp';
-            const templateConfig = adapter.templates.passwordResetEmail;
+            const templateName = 'passwordResetEmail';
 
             const options = { link, appName, user };
-            const expectedArguments = { link, appName, user, templateConfig };
+            const expectedArguments = { templateName, link, appName, user };
 
             // The Parse Server will invoke this adapter method with similar options
-            adapter.sendPasswordResetEmail(options);
+            const promise = adapter.sendPasswordResetEmail(options);
+            expect(promise).to.be.an.instanceof(Promise);
 
             sinon.assert.calledWith(_sendMail, expectedArguments);
         });
@@ -212,17 +213,18 @@ describe('MailgunAdapter', function () {
             _sendMail.restore();
         });
 
-        it('should invoke #_sendMail() with the correct arguments', function () {
+        it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
             const link = 'http://verify-account-link';
             const appName = 'AwesomeApp';
-            const templateConfig = adapter.templates.verificationEmail;
+            const templateName = 'verificationEmail';
 
             const options = { link, appName, user };
-            const expectedArguments = { link, appName, user, templateConfig };
+            const expectedArguments = { templateName, link, appName, user };
 
             // The Parse Server will invoke this adapter method with similar options
-            adapter.sendVerificationEmail(options);
+            const promise = adapter.sendVerificationEmail(options);
+            expect(promise).to.be.an.instanceof(Promise);
 
             sinon.assert.calledWith(_sendMail, expectedArguments);
         });
@@ -239,16 +241,20 @@ describe('MailgunAdapter', function () {
             _sendMail.restore();
         });
 
-        it('should invoke #_sendMail() with the correct arguments', function () {
+        it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
             const templateName = 'customEmail';
             const fromAddress = config.fromAddress;
             const recipient = 'test@test.com';
+            const subject = 'Custom email alert';
             const variables = { appName: 'AwesomeApp', username: 'test' };
-            const options = {templateName, fromAddress, recipient, variables};
+            const options = { templateName, subject, fromAddress, recipient, variables };
+            const expectedArguments = { templateName, subject, fromAddress, recipient, variables, direct: true };
 
             const promise = adapter.send(options);
             expect(promise).to.be.an.instanceof(Promise);
+
+            sinon.assert.calledWith(_sendMail, expectedArguments);
         });
     });
 
