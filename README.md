@@ -59,12 +59,11 @@ With a few lines of code, it's also possible to use the MailgunAdapter directly,
 
 ```js
 // Get access to Parse Server's cache
-// With ES2015 syntax:
 const { AppCache } = require('parse-server/lib/cache');
-// Or with old-school JS:
-const AppCache = require('parse-server/lib/cache').AppCache;
 // Get a reference to the MailgunAdapter
+// NOTE: It's best to do this inside the Parse.Cloud.define(...) method body and not at the top of your file with your other imports. This gives Parse Server time to boot, setup cloud code and the email adapter.
 const MailgunAdapter = AppCache.get('yourAppId')['userController']['adapter'];
+
 // Invoke the send method with an options object
 MailgunAdapter.send({
   templateName: 'customEmailAlert',
