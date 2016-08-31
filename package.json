@@ -26,15 +26,10 @@
     "test"
   ],
   "dependencies": {
-    "babel-cli": "^6.14.0",
-    "babel-core": "^6.14.0",
-    "babel-polyfill": "^6.13.0",
-    "babel-preset-es2015": "^6.14.0",
     "co": "^4.6.0",
     "lodash.template": "^4.4.0",
     "mailcomposer": "^3.10.0",
     "mailgun-js": "^0.7.12",
-    "sinon": "^1.17.5"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
