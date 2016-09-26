@@ -1,3 +1,4 @@
+require("babel-polyfill");
 const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
