@@ -1,6 +1,6 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.1.13",
+  "version": "2.1.14",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
@@ -29,7 +29,7 @@
     "co": "^4.6.0",
     "lodash.template": "^4.4.0",
     "mailcomposer": "^3.10.0",
-    "mailgun-js": "^0.7.12",
+    "mailgun-js": "^0.7.12"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
