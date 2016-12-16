@@ -1,10 +1,11 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.1.16",
+  "version": "2.2.0",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
     "build": "./node_modules/.bin/babel src -d lib",
+    "mailgun": "node ./lib/mailgun-tester",
     "test": "./node_modules/mocha/bin/_mocha --compilers js:babel-core/register"
   },
   "repository": {
@@ -26,18 +27,24 @@
     "test"
   ],
   "dependencies": {
-    "babel-polyfill": "^6.13.0",
+    "babel-polyfill": "^6.20.0",
     "co": "^4.6.0",
     "lodash.template": "^4.4.0",
-    "mailcomposer": "^3.10.0",
-    "mailgun-js": "^0.7.12"
+    "mailcomposer": "^4.0.0",
+    "mailgun-js": "^0.7.14"
   },
   "devDependencies": {
-    "babel-cli": "^6.10.1",
-    "babel-core": "^6.10.4",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.20.0",
+    "babel-preset-es2015": "^6.18.0",
     "chai": "^3.5.0",
-    "mocha": "^2.5.3",
-    "sinon": "^1.17.4"
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.6"
+  },
+  "peerDependencies": {
+    "parse-server": "^2.3.1"
+  },
+  "engines": {
+    "node": ">=4.5"
   }
 }
