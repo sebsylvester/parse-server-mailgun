@@ -39,3 +39,5 @@ jspm_packages
 # WebStorm
 .idea
 .DS_Store
+mailgun.json
+lib
