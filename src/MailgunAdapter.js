@@ -1,4 +1,4 @@
-require("babel-polyfill");
+require('babel-polyfill');
 const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
@@ -22,14 +22,17 @@ class MailgunAdapter extends MailAdapter.default {
         }
 
         const { templates = {} } = options;
-        ['passwordResetEmail', 'verificationEmail'].forEach((key) => {
-            const { subject, pathPlainText, callback } = templates[key] || {};
-            if (typeof subject !== 'string' || typeof pathPlainText !== 'string')
-                throw new Error('MailgunAdapter templates are not properly configured.');
+        for (let name in templates) {
+            const { subject, pathPlainText, callback } = templates[name] || {};
 
-            if (callback && typeof callback !== 'function')
+            if (typeof subject !== 'string' || typeof pathPlainText !== 'string') {
+                throw new Error('MailgunAdapter templates are not properly configured.');
+            }
+
+            if (callback && typeof callback !== 'function') {
                 throw new Error('MailgunAdapter template callback is not a function.');
-        });
+            }
+        }
 
         this.mailgun = mailgun({ apiKey, domain });
         this.fromAddress = fromAddress;
@@ -44,24 +47,33 @@ class MailgunAdapter extends MailAdapter.default {
      */
     _sendMail(options) {
         const self = this;
-        let message = {}, templateVars = {}, templateName = options.templateName;
+        let message = {},
+            template,
+            templateVars = {},
+            templateName = options.templateName;
 
-        if (!templateName)
+        if (!templateName) {
             throw new Error('Invalid options object: missing templateName');
+        }
 
-        let template = this.templates[templateName];
+        template = this.templates[templateName];
 
-        if (!template)
+        if (!template) {
             throw new Error(`Could not find template with name ${templateName}`);
+        }
 
         // The adapter is used directly by the user's code instead via Parse Server
         if (options.direct) {
             const { subject, fromAddress, recipient, variables } = options;
-            if (!subject && !template.subject) throw new Error(`Cannot send email with template ${templateName} without a subject`);
-            if (!recipient) throw new Error(`Cannot send email with template ${templateName} without a recipient`);
+
+            if (!subject && !template.subject) {
+                throw new Error(`Cannot send email with template ${templateName} without a subject`);
+            }
+            if (!recipient) {
+                throw new Error(`Cannot send email with template ${templateName} without a recipient`);
+            }
 
             templateVars = variables;
-
             message = {
                 from: fromAddress || this.fromAddress,
                 to: recipient,
@@ -140,22 +152,18 @@ class MailgunAdapter extends MailAdapter.default {
                 message: mimeString.toString('utf8')
             };
 
-            return payload;
-
-        }).then( payload => {
             return new Promise((resolve, reject) => {
-                this.mailgun.messages().sendMime(payload, (error, body) => {
+                self.mailgun.messages().sendMime(payload, (error, body) => {
                     if (error) reject(error);
                     resolve(body);
                 });
             });
-        }, error => {
-            console.error(error);
-        });
+
+        }).catch(e => console.error(e));
     }
 
     /**
-     * _sendMail wrapper to send an email with password reset link
+     * sendMail wrapper to send an email with password reset link
      * The options object would have the parameters link, appName, user
      * @param {Object} options
      * @returns {Promise}
@@ -165,7 +173,7 @@ class MailgunAdapter extends MailAdapter.default {
     }
 
     /**
-     * _sendMail wrapper to send an email with an account verification link
+     * sendMail wrapper to send an email with an account verification link
      * The options object would have the parameters link, appName, user
      * @param {Object} options
      * @returns {Promise}
@@ -175,7 +183,7 @@ class MailgunAdapter extends MailAdapter.default {
     }
 
     /**
-     * _sendMail wrapper to send general purpose emails
+     * sendMail wrapper to send general purpose emails
      * The options object would have the parameters:
      * - templateName: name of template to be used
      * - subject: overrides the default value
