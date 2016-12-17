@@ -5,7 +5,22 @@ Allows your Parse Server app to send template-based emails through Mailgun. Just
 
 `npm install --save parse-server-mailgun`
 
-## Configuration
+## Configure test utility
+To quickly test the adapter with your own Mailgun api key and domain, create a configuration file ```mailgun.json``` in the module's root directory:
+```
+Example:
+{
+   "apiKey": "your mailgun api key",
+   "fromAddress": "Team <noreply@yourdomain.com>",
+   "domain": "yourdomain.com",
+   "recipient": "your@email.com",
+   "username": "you",
+   "appName": "YourApp"
+}
+```
+Then, inside the module's root directory, run ```node ./src/mailgun-tester```
+
+## Adapter configuration
 As is the case with the default Mailgun adapter that comes with the Parse Server, you need to set a **fromAddres**, and the **domain** and **apiKey** provided by Mailgun.
 In addition, you also need to configure the **templates** you want to use.
 You must provide at least a plain-text version for each template. The html versions are optional.
@@ -75,10 +90,6 @@ MailgunAdapter.send({
   variables: { alert: 'New posts' } // {{alert}} will be compiled to 'New posts'
 });
 ```
-
-### Breaking changes since v2.0.0
-The dependency on cheerio is removed. From now on, use Mustache-style variable syntax, e.g. ```{{variable}}```, in your templates.
-**If you're upgrading from 1.0.2, be sure to update your templates with the new syntax style!**
 
 ### Sample templates and template variables
 In the test directory, there are a few examples to get you started.
