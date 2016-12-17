@@ -27,7 +27,6 @@
     "test"
   ],
   "dependencies": {
-    "babel-polyfill": "^6.20.0",
     "co": "^4.6.0",
     "lodash.template": "^4.4.0",
     "mailcomposer": "^4.0.0",
