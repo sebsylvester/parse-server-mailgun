@@ -1,4 +1,3 @@
-require('babel-polyfill');
 const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
@@ -10,7 +9,7 @@ const path = require('path');
 /**
  * MailAdapter implementation used by the Parse Server to send
  * password reset and email verification emails though Mailgun
- * @class
+ * @classnpm install --save-dev babel-preset-es2015-node
  */
 class MailgunAdapter extends MailAdapter.default {
     constructor(options = {}) {
