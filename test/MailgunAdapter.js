@@ -1,5 +1,3 @@
-require("babel-polyfill");
-
 const MailgunAdapter = require('../src/MailgunAdapter');
 const expect = require('chai').expect;
 const sinon = require('sinon');
