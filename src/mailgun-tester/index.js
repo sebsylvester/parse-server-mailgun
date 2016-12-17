@@ -23,10 +23,8 @@ const path = require('path');
 const Parse = {
     User: class User {
         get(key) {
-            if(key === 'username') return 'foo';
-            else if(key === 'email') return 'foo@bar.com';
-            else if(key === 'firstName') return 'Foo';
-            else if(key === 'lastName') return 'Bar';
+            if(key === 'username') return USERNAME;
+            else if(key === 'email') return RECIPIENT;
         }
     }
 };
