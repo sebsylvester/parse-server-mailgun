@@ -6,6 +6,13 @@ const co = require('co');
 const fs = require('fs');
 const path = require('path');
 
+const ERRORS = {
+    missing_mailgun_settings: 'MailgunAdapter requires valid API Key, domain and fromAddress.',
+    bad_template_config: 'MailgunAdapter templates are not properly configured.',
+    invalid_callback: 'MailgunAdapter template callback is not a function.',
+    invalid_template_name: 'Invalid options object: missing templateName'
+};
+
 /**
  * MailAdapter implementation used by the Parse Server to send
  * password reset and email verification emails though Mailgun
@@ -17,19 +24,23 @@ class MailgunAdapter extends MailAdapter.default {
 
         const { apiKey, domain, fromAddress } = options;
         if (!apiKey || !domain || !fromAddress) {
-            throw new Error('MailgunAdapter requires valid API Key, domain and fromAddress.');
+            throw new Error(ERRORS.missing_mailgun_settings);
         }
 
-        const { templates = {} } = options;
+        const { templates } = options;
+        if (!templates || Object.keys(templates).length === 0) {
+            throw new Error(ERRORS.bad_template_config);
+        }
+
         for (let name in templates) {
             const { subject, pathPlainText, callback } = templates[name] || {};
 
             if (typeof subject !== 'string' || typeof pathPlainText !== 'string') {
-                throw new Error('MailgunAdapter templates are not properly configured.');
+                throw new Error(ERRORS.bad_template_config);
             }
 
             if (callback && typeof callback !== 'function') {
-                throw new Error('MailgunAdapter template callback is not a function.');
+                throw new Error(ERRORS.invalid_callback);
             }
         }
 
@@ -52,7 +63,7 @@ class MailgunAdapter extends MailAdapter.default {
             templateName = options.templateName;
 
         if (!templateName) {
-            throw new Error('Invalid options object: missing templateName');
+            throw new Error(ERRORS.invalid_template_name);
         }
 
         template = this.templates[templateName];

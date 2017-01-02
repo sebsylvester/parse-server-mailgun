@@ -40,115 +40,59 @@ const config = {
 };
 
 describe('MailgunAdapter', function () {
-    describe('creating a new instance', function () {
+    describe.only('creating a new instance', function () {
+        function throwsError (args) {
+            new MailgunAdapter(args);
+        }
+
         it('should fail if not called with an apiKey, domain or fromAddress', function () {
-            try {
-                new MailgunAdapter({ domain: '.', fromAddress: '.' });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter requires valid API Key, domain and fromAddress.');
-            }
-
-            try {
-                new MailgunAdapter({ apiKey: '.', fromAddress: '.' });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter requires valid API Key, domain and fromAddress.');
-            }
-
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.' });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter requires valid API Key, domain and fromAddress.');
-            }
+            expect(throwsError.bind(null, { domain: '.', fromAddress: '.' })).to.throw('MailgunAdapter requires valid API Key, domain and fromAddress.');
+            expect(throwsError.bind(null, { apiKey: '.', fromAddress: '.' })).to.throw('MailgunAdapter requires valid API Key, domain and fromAddress.');
+            expect(throwsError.bind(null, { apiKey: '.', domain: '.' })).to.throw('MailgunAdapter requires valid API Key, domain and fromAddress.');
         });
 
         it('should fail without properly configured templates option', function () {
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.' });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter templates are not properly configured.');
-            }
+            const test_1 = { apiKey: '.', domain: '.', fromAddress: '.' };
+            expect(throwsError.bind(null, test_1)).to.throw('MailgunAdapter templates are not properly configured.');
 
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.',
-                    templates: {
-                        passwordResetEmail: {},
-                        verificationEmail: {}
-                    }
-                });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter templates are not properly configured.');
-            }
+            const test_2 = {
+                apiKey: '.', domain: '.', fromAddress: '.',
+                templates: { passwordResetEmail: {}, verificationEmail: {} }
+            };
+            expect(throwsError.bind(null, test_2)).to.throw('MailgunAdapter templates are not properly configured.');
 
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.',
-                    templates: {
-                        passwordResetEmail: {
-                            subject: '.'
-                        },
-                        verificationEmail: {
-                            subject: '.'
-                        }
-                    }
-                });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter templates are not properly configured.');
-            }
+            const test_3 = {
+                apiKey: '.', domain: '.', fromAddress: '.',
+                templates: {
+                    passwordResetEmail: { subject: '.' },
+                    verificationEmail: { subject: '.' }
+                }
+            };
+            expect(throwsError.bind(null, test_3)).to.throw('MailgunAdapter templates are not properly configured.');
 
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.',
-                    templates: {
-                        passwordResetEmail: {
-                            pathPlainText: '.'
-                        },
-                        verificationEmail: {
-                            pathPlainText: '.'
-                        }
-                    }
-                });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter templates are not properly configured.');
-            }
+            const test_4 = {
+                apiKey: '.', domain: '.', fromAddress: '.',
+                templates: {
+                    passwordResetEmail: { pathPlainText: '.' },
+                    verificationEmail: { pathPlainText: '.' }
+                }
+            };
+            expect(throwsError.bind(null, test_4)).to.throw('MailgunAdapter templates are not properly configured.');
 
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.',
-                    templates: {
-                        passwordResetEmail: {
-                            pathPlainText: '.'
-                        },
-                        verificationEmail: {
-                            pathPlainText: '.'
-                        }
-                    }
-                });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter templates are not properly configured.');
-            }
-
-            try {
-                new MailgunAdapter({ apiKey: '.', domain: '.', fromAddress: '.',
-                    templates: {
-                        passwordResetEmail: {
-                            subject: 'Reset your password',
-                            pathPlainText: '.',
-                            callback: ''
-                        },
-                        verificationEmail: {
-                            subject: 'Confirm your email',
-                            pathPlainText: '.'
-                        }
-                    }
-                });
-            } catch (error) {
-                expect(error.message).to.equal('MailgunAdapter template callback is not a function.');
-            }
+            const test_5 = {
+                apiKey: '.', domain: '.', fromAddress: '.',
+                templates: {
+                    passwordResetEmail: { pathPlainText: '.' },
+                    verificationEmail: { pathPlainText: '.' }
+                }
+            };
+            expect(throwsError.bind(null, test_5)).to.throw('MailgunAdapter templates are not properly configured.');
         });
 
         it('should succeed with properly configured templates option', function (done) {
             try {
                 const adapter = new MailgunAdapter({
-                    apiKey: '.',
-                    domain: '.',
-                    fromAddress: '.',
+                    apiKey: '.', domain: '.', fromAddress: '.',
                     templates: {
                         passwordResetEmail: {
                             subject: 'Reset your password',
