@@ -40,7 +40,7 @@ const config = {
 };
 
 describe('MailgunAdapter', function () {
-    describe.only('creating a new instance', function () {
+    describe('creating a new instance', function () {
         function throwsError (args) {
             new MailgunAdapter(args);
         }
