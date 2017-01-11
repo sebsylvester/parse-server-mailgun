@@ -1,4 +1,4 @@
-# parse-server-mailgun
+# parse-server-mailgun [![Build Status](https://travis-ci.org/sebsylvester/parse-server-mailgun.svg?branch=master)](https://travis-ci.org/sebsylvester/parse-server-mailgun) [![npm version](https://badge.fury.io/js/parse-server-mailgun.svg)](https://badge.fury.io/js/parse-server-mailgun)
 Allows your Parse Server app to send template-based emails through Mailgun. Just add your template files (plain text and html) to the email adapter's configuration.
 
 ## Installation
