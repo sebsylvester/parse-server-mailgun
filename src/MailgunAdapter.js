@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ERRORS = {
+    missing_configuration: 'MailgunAdapter requires configuration.',
     missing_mailgun_settings: 'MailgunAdapter requires valid API Key, domain and fromAddress.',
     bad_template_config: 'MailgunAdapter templates are not properly configured.',
     invalid_callback: 'MailgunAdapter template callback is not a function.',
@@ -19,7 +20,11 @@ const ERRORS = {
  * @classnpm install --save-dev babel-preset-es2015-node
  */
 class MailgunAdapter extends MailAdapter.default {
-    constructor(options = {}) {
+    constructor(options) {
+        if (!options) {
+            throw new Error(ERRORS.missing_configuration);
+        }
+        
         super(options);
 
         const { apiKey, domain, fromAddress } = options;
@@ -33,7 +38,7 @@ class MailgunAdapter extends MailAdapter.default {
         }
 
         for (let name in templates) {
-            const { subject, pathPlainText, callback } = templates[name] || {};
+            const { subject, pathPlainText, callback } = templates[name];
 
             if (typeof subject !== 'string' || typeof pathPlainText !== 'string') {
                 throw new Error(ERRORS.bad_template_config);
@@ -44,10 +49,14 @@ class MailgunAdapter extends MailAdapter.default {
             }
         }
 
+        this.mailcomposer = mailcomposer;
         this.mailgun = mailgun({ apiKey, domain });
         this.fromAddress = fromAddress;
         this.templates = templates;
         this.cache = {};
+        this.message = {};
+        this.templateVars = {};
+        this.selectedTemplate = {};
     }
 
     /**
@@ -56,18 +65,12 @@ class MailgunAdapter extends MailAdapter.default {
      * @returns {Promise}
      */
     _sendMail(options) {
-        const self = this;
-        let message = {},
-            template,
-            templateVars = {},
-            templateName = options.templateName;
-
+        let templateName = this.selectedTemplate.name = options.templateName;
         if (!templateName) {
             throw new Error(ERRORS.invalid_template_name);
         }
 
-        template = this.templates[templateName];
-
+        let template = this.selectedTemplate.config = this.templates[templateName];
         if (!template) {
             throw new Error(`Could not find template with name ${templateName}`);
         }
@@ -75,16 +78,13 @@ class MailgunAdapter extends MailAdapter.default {
         // The adapter is used directly by the user's code instead via Parse Server
         if (options.direct) {
             const { subject, fromAddress, recipient, variables } = options;
-
-            if (!subject && !template.subject) {
-                throw new Error(`Cannot send email with template ${templateName} without a subject`);
-            }
+            
             if (!recipient) {
                 throw new Error(`Cannot send email with template ${templateName} without a recipient`);
             }
 
-            templateVars = variables;
-            message = {
+            this.templateVars = variables || {};
+            this.message = {
                 from: fromAddress || this.fromAddress,
                 to: recipient,
                 subject: subject || template.subject
@@ -92,84 +92,85 @@ class MailgunAdapter extends MailAdapter.default {
         } else {
             const { link, appName, user } = options;
             const { callback } = template;
+            
             let userVars;
-
             if (callback && typeof callback === 'function') {
                 userVars = callback(user);
-                // If custom user variables are not packaged in an object, ignore it
-                const validUserVars = userVars && userVars.constructor && userVars.constructor.name === 'Object';
-                userVars = validUserVars ? userVars : {};
+                userVars = this._validateUserVars(userVars);
             }
 
-            templateVars = Object.assign({
+            this.templateVars = Object.assign({
                 link,
                 appName,
                 username: user.get('username'),
                 email: user.get('email')
             }, userVars);
 
-            message = {
+            this.message = {
                 from: this.fromAddress,
                 to: user.get('email'),
                 subject: template.subject
             };
         }
 
-        return co(function* () {
-            let compiled;
-            let pathPlainText = template.pathPlainText;
-            let pathHtml = template.pathHtml;
-            let cachedTemplate = self.cache[templateName] = self.cache[templateName] || {};
+        return co(this._mailGenerator.bind(this)).catch(e => console.error(e));
+    }
 
-            // Load plain-text version
-            if (!cachedTemplate['text']) {
-                let plainTextEmail = yield self.loadEmailTemplate(pathPlainText);
-                plainTextEmail = plainTextEmail.toString('utf8');
-                cachedTemplate['text'] = plainTextEmail;
+    *_mailGenerator() {
+        let compiled;
+        let template = this.selectedTemplate.config;
+        let templateName = this.selectedTemplate.name;
+        let pathPlainText = template.pathPlainText;
+        let pathHtml = template.pathHtml;
+        let cachedTemplate = this.cache[templateName] = this.cache[templateName] || {};
+
+        // Load plain-text version
+        if (!cachedTemplate['text']) {
+            let plainTextEmail = yield this._loadEmailTemplate(pathPlainText);
+            plainTextEmail = plainTextEmail.toString('utf8');
+            cachedTemplate['text'] = plainTextEmail;
+        }
+
+        // Compile plain-text template
+        compiled = _template(cachedTemplate['text'], { interpolate: /{{([\s\S]+?)}}/g});
+        // Add processed text to the message object
+        this.message.text = compiled(this.templateVars);
+
+        // Load html version if available
+        if (pathHtml) {
+            if (!cachedTemplate['html']) {
+                cachedTemplate['html'] = yield this._loadEmailTemplate(pathHtml);
             }
 
-            // Compile plain-text template
-            compiled = _template(cachedTemplate['text'], { interpolate: /{{([\s\S]+?)}}/g});
-            // Add processed text to the message object
-            message.text = compiled(templateVars);
+            // Compile html template
+            compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
+            // Add processed HTML to the message object
+            this.message.html = compiled(this.templateVars);
+        }
 
-            // Load html version if available
-            if (pathHtml) {
-                if (!cachedTemplate['html']) {
-                    cachedTemplate['html'] = yield self.loadEmailTemplate(pathHtml);
-                }
+        // Initialize mailcomposer with message
+        const composer = this.mailcomposer(this.message);
 
-                // Compile html template
-                compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
-                // Add processed HTML to the message object
-                message.html = compiled(templateVars);
-            }
-
-            // Initialize mailcomposer with message
-            const composer = mailcomposer(message);
-
-            // Create MIME string
-            const mimeString = yield new Promise((resolve, reject) => {
-                composer.build((error, message) => {
-                    if (error) reject(error);
-                    resolve(message);
-                });
+        // Create MIME string
+        const mimeString = yield new Promise((resolve, reject) => {
+            composer.build((error, message) => {
+                if (error) reject(error);
+                resolve(message);
             });
+        });
 
-            // Assemble payload object for Mailgun
-            const payload = {
-                to: message.to,
-                message: mimeString.toString('utf8')
-            };
+        // Assemble payload object for Mailgun
+        const payload = {
+            to: this.message.to,
+            message: mimeString.toString('utf8')
+        };
 
-            return new Promise((resolve, reject) => {
-                self.mailgun.messages().sendMime(payload, (error, body) => {
-                    if (error) reject(error);
-                    resolve(body);
-                });
+        return new Promise((resolve, reject) => {
+            this.mailgun.messages().sendMime(payload, (error, body) => {
+                if (error) reject(error);
+                resolve(body);
             });
-
-        }).catch(e => console.error(e));
+        });
     }
 
     /**
@@ -204,7 +205,7 @@ class MailgunAdapter extends MailAdapter.default {
      * @param {Object} options
      * @returns {Promise}
      */
-    send({ templateName, subject, fromAddress, recipient, variables = {} }) {
+    send({ templateName, subject, fromAddress, recipient, variables }) {
         return this._sendMail({ templateName, subject, fromAddress, recipient, variables, direct: true });
     }
 
@@ -213,13 +214,19 @@ class MailgunAdapter extends MailAdapter.default {
      * @param {String} path
      * @returns {Promise}
      */
-    loadEmailTemplate(path) {
+    _loadEmailTemplate(path) {
         return new Promise((resolve, reject) => {
             fs.readFile(path, (err, data) => {
                 if (err) reject(err);
                 resolve(data);
             });
         });
+    }
+
+    _validateUserVars(userVars) {
+        const validUserVars = userVars && userVars.constructor === Object;
+        // Fall back to an empty object if the callback did not return an Object instance
+        return validUserVars ? userVars : {};
     }
 }
 
