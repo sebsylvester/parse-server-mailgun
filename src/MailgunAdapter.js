@@ -116,6 +116,10 @@ class MailgunAdapter extends MailAdapter.default {
         return co(this._mailGenerator.bind(this)).catch(e => console.error(e));
     }
 
+    /**
+     * Generator function that handles that handles all the async operations:
+     * template loading, MIME string building and email sending.
+     */
     *_mailGenerator() {
         let compiled;
         let template = this.selectedTemplate.config;
@@ -223,6 +227,11 @@ class MailgunAdapter extends MailAdapter.default {
         });
     }
 
+    /**
+     * Validator for user provided template variables
+     * @param {Object} userVars
+     * @returns {Object}
+     */
     _validateUserVars(userVars) {
         const validUserVars = userVars && userVars.constructor === Object;
         // Fall back to an empty object if the callback did not return an Object instance
