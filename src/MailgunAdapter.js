@@ -33,6 +33,8 @@ class MailgunAdapter extends MailAdapter.default {
             throw new Error(ERRORS.missing_mailgun_settings);
         }
 
+        const { compiler = _template } = options;
+
         const { templates } = options;
         if (!templates || Object.keys(templates).length === 0) {
             throw new Error(ERRORS.bad_template_config);
@@ -58,6 +60,7 @@ class MailgunAdapter extends MailAdapter.default {
         this.message = {};
         this.templateVars = {};
         this.selectedTemplate = {};
+        this.compiler = compiler;
     }
 
     /**
@@ -149,7 +152,7 @@ class MailgunAdapter extends MailAdapter.default {
 
             // Compile html template
             // compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
-            compiled = Handlebars.compile(cachedTemplate['html']);
+            compiled = this.compiler(cachedTemplate['html']);
             // Add processed HTML to the message object
             this.message.html = compiled(this.templateVars);
         }
