@@ -2,7 +2,6 @@ const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
 const _template = require('lodash.template');
-const Handlebars = require('handlebars');
 const co = require('co');
 const fs = require('fs');
 const path = require('path');
