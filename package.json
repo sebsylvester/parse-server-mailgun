@@ -30,7 +30,6 @@
   ],
   "dependencies": {
     "co": "^4.6.0",
-    "handlebars": "^4.0.6",
     "lodash.template": "^4.4.0",
     "mailcomposer": "^4.0.0",
     "mailgun-js": "^0.8.1",
