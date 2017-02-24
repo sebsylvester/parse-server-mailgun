@@ -150,8 +150,8 @@ class MailgunAdapter extends MailAdapter.default {
             }
 
             // Compile html template
-            // compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
             compiled = this.compiler(cachedTemplate['html']);
+
             // Add processed HTML to the message object
             this.message.html = compiled(this.templateVars);
         }
