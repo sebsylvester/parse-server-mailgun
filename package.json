@@ -1,6 +1,6 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.3.8",
+  "version": "2.4.8",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "co": "^4.6.0",
-    "lodash.template": "^4.4.0",
+    "handlebars": "^4.0.6",
     "mailcomposer": "^4.0.0",
     "mailgun-js": "^0.8.1",
     "parse-server": "^2.3.2"
