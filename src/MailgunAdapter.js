@@ -1,7 +1,7 @@
 const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
-const _template = require('lodash.template');
+const Mustache = require('mustache');
 const co = require('co');
 const fs = require('fs');
 const path = require('path');
@@ -136,20 +136,16 @@ class MailgunAdapter extends MailAdapter.default {
         }
 
         // Compile plain-text template
-        compiled = _template(cachedTemplate['text'], { interpolate: /{{([\s\S]+?)}}/g});
-        // Add processed text to the message object
-        this.message.text = compiled(this.templateVars);
+        this.message.text = Mustache.render(cachedTemplate['text'], this.templateVars);
 
         // Load html version if available
         if (pathHtml) {
             if (!cachedTemplate['html']) {
-                cachedTemplate['html'] = yield this._loadEmailTemplate(pathHtml);
+                let htmlEmail = yield this._loadEmailTemplate(pathHtml);
+                cachedTemplate['html'] = htmlEmail.toString('utf8');
             }
-
-            // Compile html template
-            compiled = _template(cachedTemplate['html'], { interpolate: /{{([\s\S]+?)}}/g});
             // Add processed HTML to the message object
-            this.message.html = compiled(this.templateVars);
+            this.message.html = Mustache.render(cachedTemplate['html'], this.templateVars);;
         }
 
         // Initialize mailcomposer with message
