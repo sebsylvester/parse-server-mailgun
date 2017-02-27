@@ -74,8 +74,9 @@ var server = ParseServer({
 ```
 
 ### Templates
-The Parse Server uses the MailgunAdapter for only two use cases: password reset and email address verification.
-With a few lines of code, it's also possible to use the MailgunAdapter directly, so that you can send any other template-based email, provided it has been configured as shown in the example configuration above.
+The Parse Server only uses the MailgunAdapter for two use cases: password reset and email address verification.
+With a few lines of code, it's also possible to use the MailgunAdapter directly, so that you can send any other template-based email, 
+provided it has been configured as shown in the example configuration above.
 
 ```js
 // Get access to Parse Server's cache
@@ -94,6 +95,34 @@ MailgunAdapter.send({
   recipient: 'user@email.com',
   variables: { alert: 'New posts' } // {{alert}} will be compiled to 'New posts'
 });
+```
+
+Version 2.4.0 switched from templating with lodash.template to using the excellent [Mustache](https://github.com/janl/mustache.js) library. This allows for a lot more flexibility in your template code. For example, you can now pass an array as one of the template variables:
+```js
+MailgunAdapter.send({
+  //...
+  variables: { 
+    stooges: [
+      { name: "Moe" }, 
+      { name: "Larry" }, 
+      { name: "Curly" }
+    ]
+  }
+});
+```
+
+So that your templates can iterate over it like this:
+```
+{{#stooges}}
+  <b>{{name}}</b>
+{{/stooges}}
+```
+
+Which will result in the following output:
+```
+<b>Moe</b>
+<b>Larry</b>
+<b>Curly</b>
 ```
 
 ### Sample templates and template variables
