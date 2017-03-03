@@ -367,10 +367,13 @@ describe('MailgunAdapter', function () {
             const promise = iterator.next().value;
             
             promise.then(res => {
-                return iterator.next(res).value;                
+                return iterator.next(res).value;        
             }).then(res => {
                 const htmlTemplate = fs.readFileSync(pathHtml);
                 expect(res.toString('utf8')).to.equal(htmlTemplate.toString('utf8'));
+                return iterator.next(res).value;
+            }).then(res => {
+                // Add another step cover the caching statement
                 done();
             });    
         });
@@ -528,7 +531,7 @@ describe('MailgunAdapter', function () {
                 config: _config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
-
+                        
             const pathPlainText = adapter.selectedTemplate.config.pathPlainText;            
             adapter.cache = {
                 passwordResetEmail: {
