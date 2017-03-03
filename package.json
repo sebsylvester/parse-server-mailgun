@@ -1,6 +1,6 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
@@ -32,8 +32,7 @@
     "co": "^4.6.0",
     "mailcomposer": "^4.0.0",
     "mailgun-js": "^0.8.1",
-    "mustache": "^2.3.0",
-    "parse-server": "^2.3.2"
+    "mustache": "^2.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
