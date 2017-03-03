@@ -1,10 +1,10 @@
-const MailAdapter = require('parse-server/lib/Adapters/Email/MailAdapter');
 const mailgun = require('mailgun-js');
 const mailcomposer = require('mailcomposer');
 const Mustache = require('mustache');
 const co = require('co');
 const fs = require('fs');
 const path = require('path');
+const MailAdapter = require('./MailAdapter');
 
 const ERRORS = {
     missing_configuration: 'MailgunAdapter requires configuration.',
@@ -19,7 +19,7 @@ const ERRORS = {
  * password reset and email verification emails though Mailgun
  * @classnpm install --save-dev babel-preset-es2015-node
  */
-class MailgunAdapter extends MailAdapter.default {
+class MailgunAdapter extends MailAdapter {
     constructor(options) {
         if (!options) {
             throw new Error(ERRORS.missing_configuration);
