@@ -301,13 +301,14 @@ describe('MailgunAdapter', function () {
     describe('#_mailGenerator', function () {
         it('should load the plain text template async', function (done) {
             const adapter = new MailgunAdapter(config);
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
+            const args = { templateVars: {}, message: {}, selectedTemplate };
 
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;
-            const iterator = adapter._mailGenerator();
+            const pathPlainText = selectedTemplate.config.pathPlainText;
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
             
             promise.then(res => {
@@ -319,26 +320,27 @@ describe('MailgunAdapter', function () {
 
         it('should use the cached plain text template when available', function (done) {
             const adapter = new MailgunAdapter(config);
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;
+            const pathPlainText = selectedTemplate.config.pathPlainText;
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
+            const args = { templateVars, message: {}, selectedTemplate };
             
-            const pathHtml = adapter.selectedTemplate.config.pathHtml;
-            const iterator = adapter._mailGenerator();
+            const pathHtml = selectedTemplate.config.pathHtml;
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
             
             promise.then(res => {
@@ -352,18 +354,20 @@ describe('MailgunAdapter', function () {
 
         it('should load the html template async', function (done) {
             const adapter = new MailgunAdapter(config);
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
-            const pathHtml = adapter.selectedTemplate.config.pathHtml;
-            const iterator = adapter._mailGenerator();
+            const pathHtml = selectedTemplate.config.pathHtml;
+            const args = { templateVars, message: {}, selectedTemplate };
+
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
             
             promise.then(res => {
@@ -380,19 +384,19 @@ describe('MailgunAdapter', function () {
 
         it('should use the cached html template when available', function (done) {
             const adapter = new MailgunAdapter(config);
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;
-            const pathHtml = adapter.selectedTemplate.config.pathHtml;
+            const pathPlainText = selectedTemplate.config.pathPlainText;
+            const pathHtml = selectedTemplate.config.pathHtml;            
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8'),
@@ -400,7 +404,8 @@ describe('MailgunAdapter', function () {
                 }
             }
             
-            const iterator = adapter._mailGenerator();
+            const args = { templateVars, message: {}, selectedTemplate };
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
             
             promise.then(res => {
@@ -427,25 +432,26 @@ describe('MailgunAdapter', function () {
                 }};
             });            
             
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: _config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;            
+            const pathPlainText = selectedTemplate.config.pathPlainText;            
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
             
-            const iterator = adapter._mailGenerator();
+            const args = { templateVars, message: {}, selectedTemplate };
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
             
             promise.catch(error => {
@@ -468,30 +474,31 @@ describe('MailgunAdapter', function () {
                     callback(null, { success: true });
                 }};
             });            
-            adapter.message = {
+            const message = {
                 from: _config.fromAddress,
                 to: 'foo@bar.com',
                 subject: 'reset password'
             };
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: _config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;            
+            const pathPlainText = selectedTemplate.config.pathPlainText;            
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
             
-            const iterator = adapter._mailGenerator();
+            const args = { templateVars, message, selectedTemplate };
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
 
             promise.then(res => {
@@ -516,30 +523,31 @@ describe('MailgunAdapter', function () {
                     callback(new Error('Sending email failed', null));
                 }};
             });            
-            adapter.message = {
+            const message = {
                 from: _config.fromAddress,
                 to: 'foo@bar.com',
                 subject: 'reset password'
             };
-            adapter.templateVars = {
+            const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
                 username: 'me',
                 email: 'me@foo.com'
             };
-            adapter.selectedTemplate = {
+            const selectedTemplate = {
                 config: _config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
                         
-            const pathPlainText = adapter.selectedTemplate.config.pathPlainText;            
+            const pathPlainText = selectedTemplate.config.pathPlainText;            
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
             
-            const iterator = adapter._mailGenerator();
+            const args = { templateVars, message, selectedTemplate };
+            const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
 
             promise.then(res => {
