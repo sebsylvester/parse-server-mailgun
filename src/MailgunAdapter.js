@@ -54,9 +54,6 @@ class MailgunAdapter extends MailAdapter {
         this.fromAddress = fromAddress;
         this.templates = templates;
         this.cache = {};
-        this.message = {};
-        this.templateVars = {};
-        this.selectedTemplate = {};
     }
 
     /**
@@ -65,12 +62,14 @@ class MailgunAdapter extends MailAdapter {
      * @returns {Promise}
      */
     _sendMail(options) {
-        let templateName = this.selectedTemplate.name = options.templateName;
+        let templateVars, message, selectedTemplate = {};
+        
+        let templateName = selectedTemplate.name = options.templateName;
         if (!templateName) {
             throw new Error(ERRORS.invalid_template_name);
         }
 
-        let template = this.selectedTemplate.config = this.templates[templateName];
+        let template = selectedTemplate.config = this.templates[templateName];
         if (!template) {
             throw new Error(`Could not find template with name ${templateName}`);
         }
@@ -83,8 +82,8 @@ class MailgunAdapter extends MailAdapter {
                 throw new Error(`Cannot send email with template ${templateName} without a recipient`);
             }
 
-            this.templateVars = variables || {};
-            this.message = {
+            templateVars = variables || {};
+            message = {
                 from: fromAddress || this.fromAddress,
                 to: recipient,
                 subject: subject || template.subject
@@ -99,31 +98,32 @@ class MailgunAdapter extends MailAdapter {
                 userVars = this._validateUserVars(userVars);
             }
 
-            this.templateVars = Object.assign({
+            templateVars = Object.assign({
                 link,
                 appName,
                 username: user.get('username'),
                 email: user.get('email')
             }, userVars);
 
-            this.message = {
+            message = {
                 from: this.fromAddress,
                 to: user.get('email'),
                 subject: template.subject
             };
         }
 
-        return co(this._mailGenerator.bind(this)).catch(e => console.error(e));
+        const args = { templateVars, message, selectedTemplate };
+        return co(this._mailGenerator.bind(this, args)).catch(e => console.error(e));
     }
 
     /**
      * Generator function that handles that handles all the async operations:
      * template loading, MIME string building and email sending.
      */
-    *_mailGenerator() {
+    *_mailGenerator(args) {
         let compiled;
-        let template = this.selectedTemplate.config;
-        let templateName = this.selectedTemplate.name;
+        let { config: template, name: templateName } = args.selectedTemplate;
+        let { message, templateVars } = args;
         let pathPlainText = template.pathPlainText;
         let pathHtml = template.pathHtml;
         let cachedTemplate = this.cache[templateName] = this.cache[templateName] || {};
@@ -136,7 +136,7 @@ class MailgunAdapter extends MailAdapter {
         }
 
         // Compile plain-text template
-        this.message.text = Mustache.render(cachedTemplate['text'], this.templateVars);
+        message.text = Mustache.render(cachedTemplate['text'], templateVars);
 
         // Load html version if available
         if (pathHtml) {
@@ -145,11 +145,11 @@ class MailgunAdapter extends MailAdapter {
                 cachedTemplate['html'] = htmlEmail.toString('utf8');
             }
             // Add processed HTML to the message object
-            this.message.html = Mustache.render(cachedTemplate['html'], this.templateVars);;
+            message.html = Mustache.render(cachedTemplate['html'], templateVars);;
         }
 
         // Initialize mailcomposer with message
-        const composer = this.mailcomposer(this.message);
+        const composer = this.mailcomposer(message);
 
         // Create MIME string
         const mimeString = yield new Promise((resolve, reject) => {
@@ -161,7 +161,7 @@ class MailgunAdapter extends MailAdapter {
 
         // Assemble payload object for Mailgun
         const payload = {
-            to: this.message.to,
+            to: message.to,
             message: mimeString.toString('utf8')
         };
 
