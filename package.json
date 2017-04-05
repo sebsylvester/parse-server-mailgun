@@ -1,6 +1,6 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
@@ -44,6 +44,6 @@
     "sinon": "^1.17.6"
   },
   "engines": {
-    "node": ">=4.5"
+    "node": ">=4.6"
   }
 }
