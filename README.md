@@ -94,6 +94,12 @@ MailgunAdapter.send({
   fromAddress: 'Alerts <noreply@yourapp.com>',
   recipient: 'user@email.com',
   variables: { alert: 'New posts' } // {{alert}} will be compiled to 'New posts'
+  // Additional message fields can be included with the "extra" option
+  // See https://nodemailer.com/extras/mailcomposer/#e-mail-message-fields for an overview of what can be included
+  extra: {
+    attachments: [/* include attachment objects */]
+    replyTo: 'reply-to-address'
+  }
 });
 ```
 
