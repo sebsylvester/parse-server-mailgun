@@ -205,8 +205,8 @@ class MailgunAdapter extends MailAdapter {
      * @param {Object} options
      * @returns {Promise}
      */
-    send({ templateName, subject, fromAddress, recipient, variables }) {
-        return this._sendMail({ templateName, subject, fromAddress, recipient, variables, direct: true });
+    send({ templateName, subject, fromAddress, recipient, variables, extra }) {
+        return this._sendMail({ templateName, subject, fromAddress, recipient, variables, extra, direct: true });
     }
 
     /**
