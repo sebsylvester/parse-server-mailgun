@@ -226,8 +226,9 @@ describe('MailgunAdapter', function () {
             const recipient = 'test@test.com';
             const subject = 'Custom email alert';
             const variables = { appName: 'AwesomeApp', username: 'test' };
-            const options = { templateName, subject, fromAddress, recipient, variables };
-            const expectedArguments = { templateName, subject, fromAddress, recipient, variables, direct: true };
+            const extra = {};
+            const options = { templateName, subject, fromAddress, recipient, variables, extra };
+            const expectedArguments = { templateName, subject, fromAddress, recipient, variables, extra, direct: true };
 
             const promise = adapter.send(options);
             expect(promise).to.be.an.instanceof(Promise);
