@@ -76,18 +76,18 @@ class MailgunAdapter extends MailAdapter {
 
         // The adapter is used directly by the user's code instead via Parse Server
         if (options.direct) {
-            const { subject, fromAddress, recipient, variables } = options;
+            const { subject, fromAddress, recipient, variables, extra } = options;
             
             if (!recipient) {
                 throw new Error(`Cannot send email with template ${templateName} without a recipient`);
             }
 
             templateVars = variables || {};
-            message = {
+            message = Object.assign({
                 from: fromAddress || this.fromAddress,
                 to: recipient,
                 subject: subject || template.subject
-            };
+            }, extra || {});
         } else {
             const { link, appName, user } = options;
             const { callback } = template;
