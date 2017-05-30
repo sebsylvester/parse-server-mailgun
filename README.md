@@ -83,7 +83,7 @@ provided it has been configured as shown in the example configuration above.
 const { AppCache } = require('parse-server/lib/cache');
 // Get a reference to the MailgunAdapter
 // NOTE: It's best to do this inside the Parse.Cloud.define(...) method body and not at the top of your file with your other imports. This gives Parse Server time to boot, setup cloud code and the email adapter.
-const MailgunAdapter = AppCache.get('yourAppId')['userController']['adapter'];
+const MailgunAdapter = AppCache.get('yourAppId').userController.adapter;
 
 // Invoke the send method with an options object
 MailgunAdapter.send({
@@ -135,7 +135,7 @@ Which will result in the following output:
 In the test directory, there are a few examples to get you started.
 
 For password reset and address verification messages, you can use the following template variables by default:
-* `{{link}}` - the reset or verification link provided by the Parse Server
+* `{{{link}}}` - the reset or verification link provided by the Parse Server (rendered as unescaped content)
 * `{{appName}}` - as is defined in your Parse Server configuration object
 * `{{username}}` - the Parse.User object's username property
 * `{{email}}` - the Parse.User object's email property
