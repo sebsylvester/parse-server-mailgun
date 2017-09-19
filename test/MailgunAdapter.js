@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const path = require('path');
 const fs = require('fs');
 const co = require('co');
-const coStub = sinon.stub(require.cache[require.resolve('co')], 'exports', () => {
+const coStub = sinon.stub(require.cache[require.resolve('co')], 'exports').callsFake(() => {
     return Promise.reject(new Error('Something failed while generating the email'));
 });
 const MailgunAdapter = require('../src/MailgunAdapter');
@@ -272,7 +272,7 @@ describe('MailgunAdapter', function () {
                 appName: 'AwesomeApp'
             }
 
-            sinon.stub(console, 'error', (error) => {
+            sinon.stub(console, 'error').callsFake((error) => {
                 expect(error.message).to.equal('Something failed while generating the email');
                 console.error.restore();
                 done();
@@ -289,7 +289,7 @@ describe('MailgunAdapter', function () {
                 recipient: 'foo@bar.com'
             }
 
-            sinon.stub(console, 'error', (error) => {
+            sinon.stub(console, 'error').callsFake((error) => {
                 expect(error.message).to.equal('Something failed while generating the email');
                 console.error.restore();
                 done();
@@ -427,11 +427,11 @@ describe('MailgunAdapter', function () {
             delete _config.templates.passwordResetEmail.pathHtml;
             const adapter = new MailgunAdapter(_config);         
             
-            sinon.stub(adapter, 'mailcomposer', () => {
+            sinon.stub(adapter, 'mailcomposer').callsFake(() => {
                 return { build: (callback) => {
                     callback(new Error('Composing message failed', null));
                 }};
-            });            
+            });   
             
             const templateVars = {
                 link: 'https://foo.com/',
@@ -468,13 +468,13 @@ describe('MailgunAdapter', function () {
             delete _config.templates.passwordResetEmail.pathHtml;
             const adapter = new MailgunAdapter(_config);
             
-            sinon.stub(adapter.mailgun, 'messages', () => {
+            sinon.stub(adapter.mailgun, 'messages').callsFake(() => {
                 return { sendMime: (payload, callback) => {
                     expect(/MIME-Version: 1.0/.test(payload.message)).to.be.true;
                     expect(payload.to).to.equal('foo@bar.com');
                     callback(null, { success: true });
                 }};
-            });            
+            });      
             const message = {
                 from: _config.fromAddress,
                 to: 'foo@bar.com',
@@ -517,7 +517,7 @@ describe('MailgunAdapter', function () {
             const adapter = new MailgunAdapter(_config);
             let mimeString;    
             
-            sinon.stub(adapter.mailgun, 'messages', () => {
+            sinon.stub(adapter.mailgun, 'messages').callsFake(() => {
                 return { sendMime: (payload, callback) => {
                     expect(/MIME-Version: 1.0/.test(payload.message)).to.be.true;
                     expect(payload.to).to.equal('foo@bar.com');
