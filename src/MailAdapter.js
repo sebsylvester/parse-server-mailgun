@@ -10,9 +10,10 @@ class MailAdapter {
    * - text: the raw text of the message
    * - subject: the subject of the email
    */
-  sendMail(options) {}
-  sendVerificationEmail({ link, appName, user }) {}
-  sendPasswordResetEmail({ link, appName, user }) {}
+  
+  sendMail(options) {} // eslint-disable-line no-unused-vars
+  sendVerificationEmail({ link, appName, user }) {} // eslint-disable-line no-unused-vars
+  sendPasswordResetEmail({ link, appName, user }) {} // eslint-disable-line no-unused-vars
 }
 
 module.exports = MailAdapter;

@@ -2,10 +2,6 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const path = require('path');
 const fs = require('fs');
-const co = require('co');
-const coStub = sinon.stub(require.cache[require.resolve('co')], 'exports').callsFake(() => {
-    return Promise.reject(new Error('Something failed while generating the email'));
-});
 const MailgunAdapter = require('../src/MailgunAdapter');
 
 // Mock Parse.User object
@@ -40,7 +36,7 @@ const config = {
             subject: 'Confirm your account',
             pathPlainText: path.join(__dirname, 'email-templates/verification_email.txt'),
             pathHtml: path.join(__dirname, 'email-templates/verification_email.html'),
-            callback: (user) => {}
+            callback: () => {}
         },
         customAlert: {
             subject: 'Important notice about your account',
@@ -164,6 +160,13 @@ describe('MailgunAdapter', function () {
 
         it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
+            adapter.mailgun.messages = () => {
+                return {
+                    sendMime(payload, callback) {
+                        callback(null, {});
+                    }
+                }
+            }
             const link = 'http://password-reset-link';
             const appName = 'AwesomeApp';
             const templateName = 'passwordResetEmail';
@@ -182,7 +185,6 @@ describe('MailgunAdapter', function () {
     describe('#sendVerificationEmail()', function () {
         let _sendMail;
 
-
         before(function () {
             _sendMail = sinon.spy(MailgunAdapter.prototype, '_sendMail');
         });
@@ -193,6 +195,13 @@ describe('MailgunAdapter', function () {
 
         it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
+            adapter.mailgun.messages = () => {
+                return {
+                    sendMime(payload, callback) {
+                        callback(null, {});
+                    }
+                }
+            }
             const link = 'http://verify-account-link';
             const appName = 'AwesomeApp';
             const templateName = 'verificationEmail';
@@ -221,6 +230,13 @@ describe('MailgunAdapter', function () {
 
         it('should invoke #_sendMail() with the correct arguments and return a promise', function () {
             const adapter = new MailgunAdapter(config);
+            adapter.mailgun.messages = () => {
+                return {
+                    sendMime(payload, callback) {
+                        callback(null, {});
+                    }
+                }
+            }
             const templateName = 'customEmail';
             const fromAddress = config.fromAddress;
             const recipient = 'test@test.com';
@@ -263,8 +279,12 @@ describe('MailgunAdapter', function () {
         });
 
         it('should catch exceptions thrown during mail generation', function(done) {
-
             const adapter = new MailgunAdapter(config);
+            sinon.stub(adapter, 'mailcomposer').callsFake(() => {
+                return { build: (callback) => {
+                    callback(new Error('Composing message failed', null));
+                }};
+            });
             const options = { 
                 templateName: 'passwordResetEmail',
                 user: new Parse.User(),
@@ -273,7 +293,8 @@ describe('MailgunAdapter', function () {
             }
 
             sinon.stub(console, 'error').callsFake((error) => {
-                expect(error.message).to.equal('Something failed while generating the email');
+                expect(error.message).to.equal('Composing message failed');
+                adapter.mailcomposer.restore();
                 console.error.restore();
                 done();
             });
@@ -282,7 +303,12 @@ describe('MailgunAdapter', function () {
         });
 
         it('should log exceptions thrown during mail generation (direct: true)', function(done) {
-            const adapter = new MailgunAdapter(config);
+            const adapter = new MailgunAdapter(config);            
+            sinon.stub(adapter, 'mailcomposer').callsFake(() => {
+                return { build: (callback) => {
+                    callback(new Error('Composing message failed', null));
+                }};
+            });
             const options = { 
                 templateName: 'customAlert',
                 direct: true,
@@ -290,7 +316,8 @@ describe('MailgunAdapter', function () {
             }
 
             sinon.stub(console, 'error').callsFake((error) => {
-                expect(error.message).to.equal('Something failed while generating the email');
+                expect(error.message).to.equal('Composing message failed');
+                adapter.mailcomposer.restore();
                 console.error.restore();
                 done();
             });
@@ -377,8 +404,8 @@ describe('MailgunAdapter', function () {
                 const htmlTemplate = fs.readFileSync(pathHtml);
                 expect(res.toString('utf8')).to.equal(htmlTemplate.toString('utf8'));
                 return iterator.next(res).value;
-            }).then(res => {
-                // Add another step cover the caching statement
+            }).then(() => {
+                // Add another step to cover the caching statement
                 done();
             });    
         });
@@ -431,7 +458,7 @@ describe('MailgunAdapter', function () {
                 return { build: (callback) => {
                     callback(new Error('Composing message failed', null));
                 }};
-            });   
+            });
             
             const templateVars = {
                 link: 'https://foo.com/',
@@ -474,7 +501,7 @@ describe('MailgunAdapter', function () {
                     expect(payload.to).to.equal('foo@bar.com');
                     callback(null, { success: true });
                 }};
-            });      
+            });
             const message = {
                 from: _config.fromAddress,
                 to: 'foo@bar.com',
@@ -504,7 +531,7 @@ describe('MailgunAdapter', function () {
 
             promise.then(res => {
                 return iterator.next(res).value;
-            }).then(res => {
+            }).then(() => {
                 adapter.mailgun.messages.restore();
                 done();
             });
@@ -515,7 +542,6 @@ describe('MailgunAdapter', function () {
             // Skip html template loading
             delete _config.templates.passwordResetEmail.pathHtml;
             const adapter = new MailgunAdapter(_config);
-            let mimeString;    
             
             sinon.stub(adapter.mailgun, 'messages').callsFake(() => {
                 return { sendMime: (payload, callback) => {

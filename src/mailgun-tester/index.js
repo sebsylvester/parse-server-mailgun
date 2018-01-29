@@ -20,14 +20,6 @@ const
 
 const MailgunAdapter = require('../MailgunAdapter');
 const path = require('path');
-const Parse = {
-    User: class User {
-        get(key) {
-            if(key === 'username') return USERNAME;
-            else if(key === 'email') return RECIPIENT;
-        }
-    }
-};
 
 const config = {
     apiKey: API_KEY,
@@ -37,14 +29,12 @@ const config = {
         passwordResetEmail: {
             subject: 'Reset your password',
             pathPlainText: path.resolve(__dirname, '../../test/email-templates/password_reset_email.txt'),
-            pathHtml: path.resolve(__dirname, '../../test/email-templates/password_reset_email.html'),
-            callback: (user) => {}
+            pathHtml: path.resolve(__dirname, '../../test/email-templates/password_reset_email.html')
         },
         verificationEmail: {
             subject: 'Confirm your account',
             pathPlainText: path.resolve(__dirname, '../../test/email-templates/verification_email.txt'),
-            pathHtml: path.resolve(__dirname, '../../test/email-templates/verification_email.html'),
-            callback: (user) => {}
+            pathHtml: path.resolve(__dirname, '../../test/email-templates/verification_email.html')
         },
         customAlert: {
             subject: 'Important notice',
@@ -59,7 +49,6 @@ const config = {
 };
 
 const adapter = new MailgunAdapter(config);
-const user = new Parse.User();
 
 adapter._sendMail({
     templateName: 'customAlert',

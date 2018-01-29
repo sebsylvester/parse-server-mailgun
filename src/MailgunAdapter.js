@@ -3,7 +3,6 @@ const mailcomposer = require('mailcomposer');
 const Mustache = require('mustache');
 const co = require('co');
 const fs = require('fs');
-const path = require('path');
 const MailAdapter = require('./MailAdapter');
 
 const ERRORS = {
@@ -121,7 +120,6 @@ class MailgunAdapter extends MailAdapter {
      * template loading, MIME string building and email sending.
      */
     *_mailGenerator(args) {
-        let compiled;
         let { config: template, name: templateName } = args.selectedTemplate;
         let { message, templateVars } = args;
         let pathPlainText = template.pathPlainText;
@@ -145,7 +143,7 @@ class MailgunAdapter extends MailAdapter {
                 cachedTemplate['html'] = htmlEmail.toString('utf8');
             }
             // Add processed HTML to the message object
-            message.html = Mustache.render(cachedTemplate['html'], templateVars);;
+            message.html = Mustache.render(cachedTemplate['html'], templateVars);
         }
 
         // Initialize mailcomposer with message
