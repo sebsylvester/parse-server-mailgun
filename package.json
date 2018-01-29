@@ -1,11 +1,14 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
     "build:watch": "babel src --out-dir lib --source-maps --watch",
     "build": "babel src --out-dir lib --source-maps",
+    "lint:src": "eslint 'src/**/*.ts'",
+    "lint:test": "eslint 'test/**/*.ts'",
+    "lint": "npm run lint:src && npm run lint:test",
     "mailgun": "node ./src/mailgun-tester",
     "test": "nyc --reporter=lcov mocha",
     "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
@@ -31,17 +34,18 @@
   "dependencies": {
     "co": "^4.6.0",
     "mailcomposer": "^4.0.2",
-    "mailgun-js": "^0.13.1",
+    "mailgun-js": "^0.14.2",
     "mustache": "^2.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-es2015-node": "^6.1.1",
     "chai": "^4.1.2",
-    "codecov": "^2.3.0",
-    "mocha": "^3.5.3",
-    "nyc": "^11.2.1",
-    "sinon": "^3.3.0"
+    "codecov": "^3.0.0",
+    "eslint": "^4.16.0",
+    "mocha": "^5.0.0",
+    "nyc": "^11.4.1",
+    "sinon": "^4.2.2"
   },
   "engines": {
     "node": ">=4.6"
