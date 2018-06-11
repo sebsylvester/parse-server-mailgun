@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/parse-server-mailgun.svg)](https://badge.fury.io/js/parse-server-mailgun)
 [![Build Status](https://travis-ci.org/sebsylvester/parse-server-mailgun.svg?branch=master)](https://travis-ci.org/sebsylvester/parse-server-mailgun) 
-[![codecov](https://codecov.io/gh/sebsylvester/parse-server-mailgun/branch/master/graph/badge.svg)](https://codecov.io/gh/sebsylvester/parse-server-mailgun)
+[![codecov](https://codecov.io/gh/sebsylvester/parse-server-mailgun/branch/master/graph/badge.svg)](https://codecov.io/gh/sebsylvester/parse-server-mailgun) [![Greenkeeper badge](https://badges.greenkeeper.io/sebsylvester/parse-server-mailgun.svg)](https://greenkeeper.io/)
 
 Allows your Parse Server app to send template-based emails through Mailgun. Just add your template files (plain text and html) to the email adapter's configuration.
 
