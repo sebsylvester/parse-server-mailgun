@@ -30,13 +30,13 @@ const config = {
         passwordResetEmail: {
             subject: 'Reset your password',
             pathPlainText: path.join(__dirname, 'email-templates/password_reset_email.txt'),
-            pathHtml: path.join(__dirname, 'email-templates/password_reset_email.html')
+            pathHtml: path.join(__dirname, 'email-templates/password_reset_email.html'),
         },
         verificationEmail: {
             subject: 'Confirm your account',
             pathPlainText: path.join(__dirname, 'email-templates/verification_email.txt'),
             pathHtml: path.join(__dirname, 'email-templates/verification_email.html'),
-            callback: () => {}
+            callback: () => {},
         },
         customAlert: {
             subject: 'Important notice about your account',
@@ -44,9 +44,20 @@ const config = {
             pathHtml: path.join(__dirname, 'email-templates/password_reset_email.html'),
         },
         customEmail: {
-          subject: 'Test custom email template',
-          pathPlainText: path.join(__dirname, 'email-templates/custom_email.txt'),
-          pathHtml: path.join(__dirname, 'email-templates/custom_email.html'),
+            subject: 'Test custom email template',
+            pathPlainText: path.join(__dirname, 'email-templates/custom_email.txt'),
+            pathHtml: path.join(__dirname, 'email-templates/custom_email.html'),
+            extra: {
+                attachments: [
+                    {
+                        cid: '1px-trans-image',
+                        encoding: 'base64',
+                        filename: 'trans.gif',
+                        path: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP',
+                    }
+                ],
+                replyTo: 'reply@test.com',
+            },
         },
     }
 };
@@ -250,6 +261,36 @@ describe('MailgunAdapter', function () {
             expect(promise).to.be.an.instanceof(Promise);
 
             sinon.assert.calledWith(_sendMail, expectedArguments);
+        });
+
+        it('should generate a payload with replyTo and attachment', function (done) {
+            const adapter = new MailgunAdapter(config);
+            adapter.mailgun.messages = () => {
+                return {
+                    sendMime(payload, callback) {
+                        callback(null, payload);
+                    }
+                }
+            }
+            const templateName = 'customEmail';
+            const fromAddress = config.fromAddress;
+            const recipient = 'test@test.com';
+            const subject = 'Custom email alert';
+            const variables = { appName: 'AwesomeApp', username: 'test' };
+            const extra = {};
+            const options = { templateName, subject, fromAddress, recipient, variables, extra };
+            const expectedArguments = { templateName, subject, fromAddress, recipient, variables, extra, direct: true };
+
+            const promise = adapter.send(options);
+
+            sinon.assert.calledWith(_sendMail, expectedArguments);
+            promise
+                .then((payload) => {
+                    expect(payload.message).to.match(/Reply-To: reply@test\.com/, 'Payload does not contain replyTo');
+                    expect(payload.message).to.match(/Content-Disposition: attachment/, 'Payload does not contain attachment');
+                    done();
+                })
+                .catch(done)
         });
     });
 
