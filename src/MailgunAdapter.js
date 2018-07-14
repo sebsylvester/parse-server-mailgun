@@ -124,6 +124,7 @@ class MailgunAdapter extends MailAdapter {
         let { message, templateVars } = args;
         let pathPlainText = template.pathPlainText;
         let pathHtml = template.pathHtml;
+        let extra = template.extra || {};
         let cachedTemplate = this.cache[templateName] = this.cache[templateName] || {};
 
         // Load plain-text version
@@ -145,6 +146,9 @@ class MailgunAdapter extends MailAdapter {
             // Add processed HTML to the message object
             message.html = Mustache.render(cachedTemplate['html'], templateVars);
         }
+
+        // Append any `extra` properties from config
+        message = Object.assign(message, extra || {});
 
         // Initialize mailcomposer with message
         const composer = this.mailcomposer(message);
