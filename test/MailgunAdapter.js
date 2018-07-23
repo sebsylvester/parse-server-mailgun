@@ -59,6 +59,16 @@ const config = {
                 replyTo: 'reply@test.com',
             },
         },
+        customEmailWithCallback: {
+            subject: 'Test custom email template with callback',
+            pathPlainText: path.join(__dirname, 'email-templates/custom_email.txt'),
+            pathHtml: path.join(__dirname, 'email-templates/custom_email.html'),
+            callback: () => new Promise((resolve) => {
+                resolve({
+                    appName: 'correctAppName'
+                });
+            })
+        }
     }
 };
 
@@ -118,13 +128,13 @@ describe('MailgunAdapter', function () {
             const test_6 = {
                 apiKey: '.', domain: '.', fromAddress: '.',
                 templates: {
-                    passwordResetEmail: { 
-                        subject: 'Reset your password', 
+                    passwordResetEmail: {
+                        subject: 'Reset your password',
                         pathPlainText: '.',
                         callback: {}
                     },
-                    verificationEmail: { 
-                        subject: 'Confirm your email', 
+                    verificationEmail: {
+                        subject: 'Confirm your email',
                         pathPlainText: '.'
                      }
                 }
@@ -326,7 +336,7 @@ describe('MailgunAdapter', function () {
                     callback(new Error('Composing message failed', null));
                 }};
             });
-            const options = { 
+            const options = {
                 templateName: 'passwordResetEmail',
                 user: new Parse.User(),
                 link: 'https://foo.com',
@@ -344,13 +354,13 @@ describe('MailgunAdapter', function () {
         });
 
         it('should log exceptions thrown during mail generation (direct: true)', function(done) {
-            const adapter = new MailgunAdapter(config);            
+            const adapter = new MailgunAdapter(config);
             sinon.stub(adapter, 'mailcomposer').callsFake(() => {
                 return { build: (callback) => {
                     callback(new Error('Composing message failed', null));
                 }};
             });
-            const options = { 
+            const options = {
                 templateName: 'customAlert',
                 direct: true,
                 recipient: 'foo@bar.com'
@@ -379,7 +389,7 @@ describe('MailgunAdapter', function () {
             const pathPlainText = selectedTemplate.config.pathPlainText;
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
-            
+
             promise.then(res => {
                 const textTemplate = fs.readFileSync(pathPlainText);
                 expect(res.toString('utf8')).to.equal(textTemplate.toString('utf8'));
@@ -405,15 +415,15 @@ describe('MailgunAdapter', function () {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
-            }
+            };
             const args = { templateVars, message: {}, selectedTemplate };
-            
+
             const pathHtml = selectedTemplate.config.pathHtml;
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
-            
+
             promise.then(res => {
-                // Since the plain text template is cached, the first yield should 
+                // Since the plain text template is cached, the first yield should
                 // be the promise that wraps the loading of the html template.
                 const htmlTemplate = fs.readFileSync(pathHtml);
                 expect(res.toString('utf8')).to.equal(htmlTemplate.toString('utf8'));
@@ -438,9 +448,9 @@ describe('MailgunAdapter', function () {
 
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
-            
+
             promise.then(res => {
-                return iterator.next(res).value;        
+                return iterator.next(res).value;
             }).then(res => {
                 const htmlTemplate = fs.readFileSync(pathHtml);
                 expect(res.toString('utf8')).to.equal(htmlTemplate.toString('utf8'));
@@ -448,7 +458,7 @@ describe('MailgunAdapter', function () {
             }).then(() => {
                 // Add another step to cover the caching statement
                 done();
-            });    
+            });
         });
 
         it('should use the cached html template when available', function (done) {
@@ -465,20 +475,20 @@ describe('MailgunAdapter', function () {
             };
 
             const pathPlainText = selectedTemplate.config.pathPlainText;
-            const pathHtml = selectedTemplate.config.pathHtml;            
+            const pathHtml = selectedTemplate.config.pathHtml;
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8'),
                     html: fs.readFileSync(pathHtml).toString('utf8')
                 }
             }
-            
+
             const args = { templateVars, message: {}, selectedTemplate };
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
-            
+
             promise.then(res => {
-                // Since the plain text and html template are cached, the first yield should 
+                // Since the plain text and html template are cached, the first yield should
                 // be the promise that wraps the composing of the MIME-string
                 const mimeString = res.toString('utf8');
                 expect(/MIME-Version: 1.0/.test(mimeString)).to.be.true;
@@ -493,14 +503,14 @@ describe('MailgunAdapter', function () {
             const _config = Object.assign({}, config);
             // Skip html template loading
             delete _config.templates.passwordResetEmail.pathHtml;
-            const adapter = new MailgunAdapter(_config);         
-            
+            const adapter = new MailgunAdapter(_config);
+
             sinon.stub(adapter, 'mailcomposer').callsFake(() => {
                 return { build: (callback) => {
                     callback(new Error('Composing message failed', null));
                 }};
             });
-            
+
             const templateVars = {
                 link: 'https://foo.com/',
                 appName: 'AwesomeApp',
@@ -512,17 +522,17 @@ describe('MailgunAdapter', function () {
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = selectedTemplate.config.pathPlainText;            
+            const pathPlainText = selectedTemplate.config.pathPlainText;
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
-            
+
             const args = { templateVars, message: {}, selectedTemplate };
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
-            
+
             promise.catch(error => {
                 expect(error.message).to.equal('Composing message failed');
                 adapter.mailcomposer.restore();
@@ -535,7 +545,7 @@ describe('MailgunAdapter', function () {
             // Skip html template loading
             delete _config.templates.passwordResetEmail.pathHtml;
             const adapter = new MailgunAdapter(_config);
-            
+
             sinon.stub(adapter.mailgun, 'messages').callsFake(() => {
                 return { sendMime: (payload, callback) => {
                     expect(/MIME-Version: 1.0/.test(payload.message)).to.be.true;
@@ -559,13 +569,13 @@ describe('MailgunAdapter', function () {
                 name: 'passwordResetEmail'
             };
 
-            const pathPlainText = selectedTemplate.config.pathPlainText;            
+            const pathPlainText = selectedTemplate.config.pathPlainText;
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
-            
+
             const args = { templateVars, message, selectedTemplate };
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;
@@ -578,19 +588,50 @@ describe('MailgunAdapter', function () {
             });
         });
 
+        it('should use the template variables from the callback', function (done) {
+          const adapter = new MailgunAdapter(config);
+          const selectedTemplate = {
+            config: config.templates.customEmailWithCallback,
+            name: 'customEmail'
+          };
+          const args = { templateVars: { answer: 42, appName: 'wrongAppName' }, message: {}, selectedTemplate };
+
+          const iterator = adapter._mailGenerator(args);
+          const promise = iterator.next().value;
+
+          promise
+            .then(res => {
+                expect(res.appName).to.eq("correctAppName");
+                return iterator.next(res).value;
+            })
+            .then(res => {
+                // Text template
+                return iterator.next(res).value;
+            })
+            .then(res => {
+                // HTML template
+                return iterator.next(res).value;
+            })
+            .then(res => {
+                // HTML template with replace placeholders
+                expect(res.toString('utf8')).to.contains('correctAppName');
+            });
+            done();
+        });
+
         it('should catch errors thrown during the sending of the email', function (done) {
             const _config = Object.assign({}, config);
             // Skip html template loading
             delete _config.templates.passwordResetEmail.pathHtml;
             const adapter = new MailgunAdapter(_config);
-            
+
             sinon.stub(adapter.mailgun, 'messages').callsFake(() => {
                 return { sendMime: (payload, callback) => {
                     expect(/MIME-Version: 1.0/.test(payload.message)).to.be.true;
                     expect(payload.to).to.equal('foo@bar.com');
                     callback(new Error('Sending email failed', null));
                 }};
-            });            
+            });
             const message = {
                 from: _config.fromAddress,
                 to: 'foo@bar.com',
@@ -606,14 +647,14 @@ describe('MailgunAdapter', function () {
                 config: _config.templates.passwordResetEmail,
                 name: 'passwordResetEmail'
             };
-                        
-            const pathPlainText = selectedTemplate.config.pathPlainText;            
+
+            const pathPlainText = selectedTemplate.config.pathPlainText;
             adapter.cache = {
                 passwordResetEmail: {
                     text: fs.readFileSync(pathPlainText).toString('utf8')
                 }
             }
-            
+
             const args = { templateVars, message, selectedTemplate };
             const iterator = adapter._mailGenerator(args);
             const promise = iterator.next().value;

@@ -23,7 +23,7 @@ class MailgunAdapter extends MailAdapter {
         if (!options) {
             throw new Error(ERRORS.missing_configuration);
         }
-        
+
         super(options);
 
         const { apiKey, domain, fromAddress } = options;
@@ -62,7 +62,7 @@ class MailgunAdapter extends MailAdapter {
      */
     _sendMail(options) {
         let templateVars, message, selectedTemplate = {};
-        
+
         let templateName = selectedTemplate.name = options.templateName;
         if (!templateName) {
             throw new Error(ERRORS.invalid_template_name);
@@ -73,10 +73,10 @@ class MailgunAdapter extends MailAdapter {
             throw new Error(`Could not find template with name ${templateName}`);
         }
 
+        let user;
         // The adapter is used directly by the user's code instead via Parse Server
         if (options.direct) {
             const { subject, fromAddress, recipient, variables, extra } = options;
-            
             if (!recipient) {
                 throw new Error(`Cannot send email with template ${templateName} without a recipient`);
             }
@@ -88,21 +88,15 @@ class MailgunAdapter extends MailAdapter {
                 subject: subject || template.subject
             }, extra || {});
         } else {
-            const { link, appName, user } = options;
-            const { callback } = template;
-            
-            let userVars;
-            if (callback && typeof callback === 'function') {
-                userVars = callback(user);
-                userVars = this._validateUserVars(userVars);
-            }
+            const { link, appName } = options;
+            user = options.user;
 
             templateVars = Object.assign({
                 link,
                 appName,
                 username: user.get('username'),
                 email: user.get('email')
-            }, userVars);
+            });
 
             message = {
                 from: this.fromAddress,
@@ -111,7 +105,7 @@ class MailgunAdapter extends MailAdapter {
             };
         }
 
-        const args = { templateVars, message, selectedTemplate };
+        const args = { templateVars, message, selectedTemplate, user };
         return co(this._mailGenerator.bind(this, args)).catch(e => console.error(e));
     }
 
@@ -122,6 +116,14 @@ class MailgunAdapter extends MailAdapter {
     *_mailGenerator(args) {
         let { config: template, name: templateName } = args.selectedTemplate;
         let { message, templateVars } = args;
+        const { callback } = template;
+
+        if (callback && typeof callback === 'function') {
+          let userVars = yield Promise.resolve(callback(args.user));
+          userVars = this._validateUserVars(userVars);
+          templateVars = Object.assign(templateVars, userVars);
+        }
+
         let pathPlainText = template.pathPlainText;
         let pathHtml = template.pathHtml;
         let extra = template.extra || {};
