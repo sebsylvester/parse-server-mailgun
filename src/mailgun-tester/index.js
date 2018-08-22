@@ -5,6 +5,7 @@ const
         "apiKey": "...",
         "fromAddress": "...",
         "domain": "...",
+        "host": "...",
         "recipient": "...",
         "username": "...",
         "appName": "..."
@@ -14,6 +15,7 @@ const
     API_KEY = mailgunConfig.apiKey,
     FROM = mailgunConfig.fromAddress,
     DOMAIN = mailgunConfig.domain,
+    HOST = mailgunConfig.host,
     RECIPIENT = mailgunConfig.recipient,
     USERNAME = mailgunConfig.username,
     APP_NAME = mailgunConfig.appName;
@@ -25,6 +27,7 @@ const config = {
     apiKey: API_KEY,
     fromAddress: FROM,
     domain: DOMAIN,
+    host: HOST,
     templates: {
         passwordResetEmail: {
             subject: 'Reset your password',

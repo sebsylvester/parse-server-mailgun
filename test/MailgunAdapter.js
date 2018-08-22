@@ -25,6 +25,7 @@ const user = new Parse.User();
 const config = {
     fromAddress: 'AwesomeApp <noreply@awesomeapp.com>',
     domain: 'yourmailgundomain.mailgun.org',
+    host: 'api.eu.mailgun.net',
     apiKey: 'secretApiKey',
     templates: {
         passwordResetEmail: {
