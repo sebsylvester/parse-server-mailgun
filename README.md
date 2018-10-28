@@ -45,6 +45,9 @@ var server = ParseServer({
       fromAddress: 'YourApp <noreply@yourapp.com>',
       // Your domain from mailgun.com
       domain: 'example.com',
+      // Mailgun host (default: 'api.mailgun.net'). 
+      // When using the EU region, the host should be set to 'api.eu.mailgun.net'
+      host: 'your.mailgun.host',
       // Your API key from mailgun.com
       apiKey: 'key-mykey',
       // The template section
