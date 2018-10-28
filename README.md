@@ -18,6 +18,7 @@ Example:
    "apiKey": "your mailgun api key",
    "fromAddress": "Team <noreply@yourdomain.com>",
    "domain": "yourdomain.com",
+   "host": "your.mailgun.host", // optional
    "recipient": "your@email.com",
    "username": "you",
    "appName": "YourApp"

@@ -81,9 +81,7 @@ class MailgunAdapter extends MailAdapter {
     if (options.direct) {
       const { subject, fromAddress, recipient, variables, extra } = options;
       if (!recipient) {
-        throw new Error(
-          `Cannot send email with template ${templateName} without a recipient`
-        );
+        throw new Error(`Cannot send email with template ${templateName} without a recipient`);
       }
 
       templateVars = variables || {};
@@ -114,9 +112,7 @@ class MailgunAdapter extends MailAdapter {
     }
 
     const args = { templateVars, message, selectedTemplate, user };
-    return co(this._mailGenerator.bind(this, args)).catch(e =>
-      console.error(e)
-    );
+    return co(this._mailGenerator.bind(this, args)).catch(e => console.error(e));
   }
 
   /**
