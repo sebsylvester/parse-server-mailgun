@@ -1,6 +1,6 @@
 {
   "name": "parse-server-mailgun",
-  "version": "2.4.13",
+  "version": "2.4.14",
   "description": "Mailgun adapter for Parse Server apps",
   "main": "./lib/MailgunAdapter.js",
   "scripts": {
@@ -11,6 +11,7 @@
     "lint": "npm run lint:src && npm run lint:test",
     "mailgun": "node ./src/mailgun-tester",
     "test": "nyc --reporter=lcov mocha",
+    "release": "npm run lint && npm run build && npm test",
     "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
   },
   "repository": {
